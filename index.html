@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<p>Number of Processes: <input min=1 max=5 value=0 type="range" id="slider"></p>
+
+<p>Number of Iterations: <input min=0 max=31 value=0 type="range" id="slider2"></p>
+
+<div style="width:1570px">
+	<svg width="880" height="770" id="my_dataviz" ></svg>
+	<svg width="600" height="770" id="my_dataviz1" ></svg>
+</div>	
+
+
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3-selection-multi.v0.4.min.js"></script>
+
+<!-- Create a div where the graph will take place -->
+
+<script>
+
+hmap();	
+
+
+
+d3.select("#slider").on("input", hmap)
+
+d3.select("#slider2").on("input", hmap)
+
+
+function hmap(){
+	
+
+	var count = d3.select("#slider").property("value")
+
+	var count1 = d3.select("#slider2").property("value")
+
+	
+	d3.json("data.json", function(data) {
+
+		console.log(data)
+		data1=data[count1]
+		console.log(data1)
+		nodes=[]
+		nodes1=[]
+		console.log(data1);
+
+		console.log(count)
+		
+		console.log(data1[1])
+		nodes1.push(data1[count])
+		console.log(nodes1)
+
+		if (count==1){
+			nodes.push(data1[0].slice(0,2))
+		}
+		if (count==2){
+			nodes.push(data1[0].slice(2,6))
+		}
+		if (count==3){
+			nodes.push(data1[0].slice(6,14))
+		}
+		if (count==4){
+			nodes.push(data1[0].slice(14,30))
+		}
+		if (count==5){
+			nodes.push(data1[0].slice(30,62))
+		}
+		console.log(nodes)	
+		console.log(nodes1)
+
+		t=Math.pow(2, count)
+		console.log(t)
+		myaxis=[]
+		for(i=0;i<t;i++){
+			myaxis.push(i+1)
+		}
+		console.log(myaxis)
+		drawadj(nodes,nodes1,myaxis)});
+
+}
+
+
+
+function drawadj(nodes,nodes1,myaxis){
+
+	console.log(nodes)
+	console.log(nodes1)
+
+	console.log(nodes)
+	let myGroups = nodes[0];
+	let myVars = nodes[0];
+	console.log(myGroups)
+	console.log(myVars)
+
+	console.log(myaxis)
+
+var svg = d3.select("#my_dataviz").attr("transform","translate(50,50)") 
+
+n=myGroups.length;
+
+var y = d3.scaleBand()
+  .range([ 660, 0 ])
+  .domain(myaxis)
+  .padding(0.01);
+
+  
+
+var yr = svg.selectAll(".yr").data(myVars);
+			yr.enter().append("text").merge(yr)
+				.attr("transform", "translate(10, 0)")
+				.attr("y", (d,i) => 660-((i)*660/n + 330/n))
+				.text(d => d)
+				.style("text-anchor","middle")
+				.style("font-size","10px")
+                .classed("yr",true);
+			yr.exit().remove();
+
+
+var x = d3.scaleBand()
+  .range([ 0, 770 ])
+  .domain(myaxis)
+  .padding(0.01);
+  
+
+  var xr = svg.selectAll(".xr").data(myGroups);
+			xr.enter().append("text").merge(xr)
+				.attr("transform", "translate(20, 670)")
+				.attr("x", (d,i) => (i)*770/n + 385/n)
+				.text(d => d)
+				.style("text-anchor","middle")
+				.style("font-size","10px")
+                .classed("xr",true);
+			xr.exit().remove();
+
+		
+
+
+var myColor = d3.scaleLinear()
+  .range(["white", "#4daf4a"])
+  .domain([1,100])  
+
+   
+
+
+nodes2=[]
+nodes2=nodes1[0]
+
+console.log(nodes2)
+console.log(nodes2[0]);
+
+
+function getMaxY(data2) {
+  return data2.reduce((max, p) => p.value > max ? p.value : max, data2[0].value);
+}
+
+//function getMinY(data1) {
+//  return data1.reduce((min, p) => p.value < min ? p.value : min, data1[0].value);
+//}
+
+//min=getMinY(nodes2)
+max=getMaxY(nodes2)
+
+console.log(max)
+//console.log(min)
+
+
+var mr = svg.selectAll(".mr").data(nodes2, function(d) {return d.source+':'+d.target;});
+	mr.enter().append("rect").merge(mr)
+	.attr("x", function(d) { return x(d.source)+20 })
+    .attr("y", function(d) { return y(d.target) })
+    .attr("width", x.bandwidth() )
+    .attr("height", y.bandwidth() )
+	.style("fill", function(d) { return myColor((d.value/max)*255)} )
+	.classed("mr",true);		
+	
+	
+mr.exit().remove(); 
+
+//bar(nodes2);
+
+}
+
+
+</script>
