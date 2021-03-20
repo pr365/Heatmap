@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<p>Number of Processes: <input min=1 max=5 value=0 type="range" id="slider"></p>
+
+<p>Number of Iterations: <input min=0 max=31 value=0 type="range" id="slider2"></p>
+
+<div style="width:1570px">
+	<svg width="880" height="770" id="my_dataviz" ></svg>
+	<svg width="600" height="770" id="my_dataviz1" ></svg>
+</div>	
+
+
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3-selection-multi.v0.4.min.js"></script>
+
+<script>
+
+hmap();	
+
+
+
+d3.select("#slider").on("input", hmap)
+
+d3.select("#slider2").on("input", hmap)
+
+
+function hmap(){
+	
+
+	var count = d3.select("#slider").property("value")
+
+	var count1 = d3.select("#slider2").property("value")
+
+	
+	d3.json("data.json", function(data) {
+
+		console.log(data)
+		data1=data[count1]
+		console.log(data1)
+		nodes=[]
+		nodes1=[]
+		console.log(data1);
+
+		console.log(count)
+		
+		console.log(data1[1])
+		nodes1.push(data1[count])
+		console.log(nodes1)
+
+		if (count==1){
+			nodes.push(data1[0].slice(0,2))
+		}
+		if (count==2){
+			nodes.push(data1[0].slice(2,6))
+		}
+		if (count==3){
+			nodes.push(data1[0].slice(6,14))
+		}
+		if (count==4){
+			nodes.push(data1[0].slice(14,30))
+		}
+		if (count==5){
+			nodes.push(data1[0].slice(30,62))
+		}
+		console.log(nodes)	
+		console.log(nodes1)
+
+		t=Math.pow(2, count)
+		console.log(t)
+		myaxis=[]
+		for(i=0;i<t;i++){
+			myaxis.push(i+1)
+		}
+		console.log(myaxis)
+		drawadj(nodes,nodes1,myaxis)});
+
+}
+
+
+
+function drawadj(nodes,nodes1,myaxis){
+
+	console.log(nodes)
+	console.log(nodes1)
+
+	console.log(nodes)
+	let myGroups = nodes[0];
+	let myVars = nodes[0];
+	console.log(myGroups)
+	console.log(myVars)
+
+	console.log(myaxis)
+
+var svg = d3.select("#my_dataviz").attr("transform","translate(50,50)") 
+
+n=myGroups.length;
+
+var y = d3.scaleBand()
+  .range([ 660, 0 ])
+  .domain(myaxis)
+  .padding(0.01);
+
+  
+
+var yr = svg.selectAll(".yr").data(myVars);
+			yr.enter().append("text").merge(yr)
+				.attr("transform", "translate(10, 0)")
+				.attr("y", (d,i) => 660-((i)*660/n + 330/n))
+				.text(d => d)
+				.style("text-anchor","middle")
+				.style("font-size","10px")
+                .classed("yr",true);
+			yr.exit().remove();
+
+
+var x = d3.scaleBand()
+  .range([ 0, 770 ])
+  .domain(myaxis)
+  .padding(0.01);
+  
+
+  var xr = svg.selectAll(".xr").data(myGroups);
+			xr.enter().append("text").merge(xr)
+				.attr("transform", "translate(20, 670)")
+				.attr("x", (d,i) => (i)*770/n + 385/n)
+				.text(d => d)
+				.style("text-anchor","middle")
+				.style("font-size","10px")
+                .classed("xr",true);
+			xr.exit().remove();
+
+var myColor = d3.scaleLinear()
+  .range(["white", "#4daf4a"])
+  .domain([1,100])  
+
+nodes2=[]
+nodes2=nodes1[0]
+
+console.log(nodes2)
+console.log(nodes2[0]);
+
+
+function getMaxY(data2) {
+  return data2.reduce((max, p) => p.value > max ? p.value : max, data2[0].value);
+}
+
+
+max=getMaxY(nodes2)
+
+console.log(max)
+
+var mr = svg.selectAll(".mr").data(nodes2, function(d) {return d.source+':'+d.target;});
+	mr.enter().append("rect").merge(mr)
+	.attr("x", function(d) { return x(d.source)+20 })
+    .attr("y", function(d) { return y(d.target) })
+    .attr("width", x.bandwidth() )
+    .attr("height", y.bandwidth() )
+	.style("fill", function(d) { return myColor((d.value/max)*255)} )
+	.classed("mr",true);		
+	
+	
+mr.exit().remove(); 
+
+bar();
+
+}
+
+function bar(){
+
+	d3.selectAll(".grid").remove();
+	d3.selectAll(".xgrid").remove();
+	d3.selectAll(".ygrid").remove();
+
+
+var count2 = d3.select("#slider2").property("value")
+
+var svg1 = d3.select("#my_dataviz1").attr("transform","translate(50,50)")
+
+d3.csv("autos.csv", function(data1) {
+
+	console.log(count2)
+	w=parseInt(count2) + 1 
+	console.log(w)
+	data=[]
+	data=data1.slice(0,w)
+	console.log(data1.slice(0,1))
+
+	console.log(data)
+	
+
+  var subgroups = ['total','all2all']
+
+  var groups = d3.map(data, function(d){return(d.iteration)}).keys()
+
+  var x = d3.scaleBand()
+      .domain(groups)
+      .range([50, 550])
+	  .padding([0.2])
+
+
+
+  var xr = 	d3.select("#my_dataviz1").append("g")
+			  .attr("transform", "translate(0," + 520 + ")")
+			  .attr("class","xgrid")
+    		.call(d3.axisBottom(x).tickSize(0));
+
+
+  //svg1.append("g")
+    //.attr("transform", "translate(0," + 520 + ")")
+    //.call(d3.axisBottom(x).tickSize(0));
+
+  var y = d3.scaleLinear()
+    .domain([0, 40])
+	.range([ 520, 20 ]);
+
+  var yr = 	d3.select("#my_dataviz1").append("g")
+  .attr("transform", "translate(50," + 0 + ")")
+  .attr("class","ygrid")
+  .call(d3.axisLeft(y));
+
+
+
+	
+  //svg1.append("g")
+  //.attr("transform", "translate(50," + 0 + ")")
+    //.call(d3.axisLeft(y));
+
+  var xSubgroup = d3.scaleBand()
+    .domain(subgroups)
+    .range([0, x.bandwidth()])
+    .padding([0.05])
+
+  var color = d3.scaleOrdinal()
+    .domain(subgroups)
+    .range(['#e41a1c','#377eb8'])
+
+  console.log(data)
+
+  var cr = d3.select("#my_dataviz1").append("g")
+  			.selectAll("g")
+			.data(data)
+			.enter()
+			.append("g")
+  			.attr("transform", function(d) { return "translate(" + x(d.iteration) + ",0)"; })
+
+  var cr1 = cr
+			.selectAll("rect")
+			.data(function(d) { return subgroups.map(function(key) { return {key: key, value: d[key]}; }); })
+			.enter()
+			.append("rect")
+			.attr("class","grid")
+			.attr("x", function(d) { return xSubgroup(d.key); })
+      		.attr("y", function(d) { return y(d.value); })
+      		.attr("width", xSubgroup.bandwidth())
+      		.attr("height", function(d) { return 520 - y(d.value); })
+	  		.attr("fill", function(d) { return color(d.key); });
+
+			//.attr("width",9)
+			//.attr("height",6)
+			//.attr("x", d=> d.x*9)
+			//.attr("y", d=> d.y*6)
+			//.style('fill', d => someColors(d.group))
+			//.style("fill-opacity", d=> d.weight)
+
+
+  //svg1.append("g")
+    //.selectAll("g")
+    //.data(data)
+    //.enter()
+    //.append("g")
+      //.attr("transform", function(d) { return "translate(" + x(d.iteration) + ",0)"; })
+    //.selectAll("rect")
+    //.data(function(d) { return subgroups.map(function(key) { return {key: key, value: d[key]}; }); })
+    //.enter().append("rect")
+      //.attr("x", function(d) { return xSubgroup(d.key); })
+      //.attr("y", function(d) { return y(d.value); })
+      //.attr("width", xSubgroup.bandwidth())
+      //.attr("height", function(d) { return 520 - y(d.value); })
+	  //.attr("fill", function(d) { return color(d.key); });
+	  
+	  var leg = svg1.selectAll(".leg").data(subgroups);
+	leg.enter().append("circle").merge(leg)
+		.attr("cx", 480)
+		.attr("cy", function(d,i){ return 25+i*25})
+		.attr("r", 4)
+		.style("fill", function(d){ return color(d)})
+		.classed("leg", true)
+		leg.exit().remove();  
+
+
+	  var tex = svg1.selectAll(".tex").data(subgroups);
+	tex.enter().append("text").merge(tex)
+		 .attr("x", 490)
+		 .attr("y", function(d,i){ return 25+i*25})
+		 .text(function(d) { return d; })
+		 .attr("font-family", "serif")
+		 .attr("font-size", "10px")
+		 .attr("fill", "indianred")
+		 .classed("tex",true);
+		 tex.exit().remove();  
+
+
+})	  
+
+}
+
+
+</script>
